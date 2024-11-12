@@ -67,7 +67,7 @@ func main() {
 			continue
 		}
 
-		if err := SyncIndex(ctx, 10000, pg, index, func(batch []map[string]interface{}) error {
+		if err := SyncIndex(config, pg, index, func(batch []map[string]interface{}) error {
 			_, err := indexMs.AddDocuments(batch)
 			if err != nil {
 				return err
@@ -141,7 +141,7 @@ func MakeIndex(config IndexConfig, drop bool, meta bool, ms meilisearch.ServiceM
 }
 
 // SyncIndex synchronizes the index in Postgres with the index in MeiliSearch.
-func SyncIndex(ctx context.Context, batchSize int, pg *pgxpool.Pool, index IndexConfig, onBatch func([]map[string]interface{}) error) error {
+func SyncIndex(config Config, pg *pgxpool.Pool, index IndexConfig, onBatch func([]map[string]interface{}) error) error {
 	query := fmt.Sprintf("SELECT * FROM %s", index.Source)
 	if index.Cursor.Column != "" {
 		query += fmt.Sprintf(" WHERE %s > '%s'", index.Cursor.Column, index.Cursor.LastSync.Format(time.RFC3339))
@@ -150,7 +150,7 @@ func SyncIndex(ctx context.Context, batchSize int, pg *pgxpool.Pool, index Index
 	offset := 0
 	wg := sync.WaitGroup{}
 	for {
-		rows, err := pg.Query(ctx, fmt.Sprintf("%s LIMIT %d OFFSET %d", query, batchSize, offset))
+		rows, err := pg.Query(ctx, fmt.Sprintf("%s LIMIT %d OFFSET %d", query, config.BatchSize, offset))
 		if err != nil {
 			return err
 		}
@@ -168,6 +168,10 @@ func SyncIndex(ctx context.Context, batchSize int, pg *pgxpool.Pool, index Index
 			break
 		}
 
+		if !config.EnableAsync {
+			wg.Wait()
+		}
+
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -176,7 +180,11 @@ func SyncIndex(ctx context.Context, batchSize int, pg *pgxpool.Pool, index Index
 			}
 		}()
 
-		offset += batchSize
+		offset += config.BatchSize
+
+		if !config.EnableAsync && config.WaitTime > 0 {
+			time.Sleep(time.Duration(config.WaitTime) * time.Millisecond)
+		}
 	}
 
 	wg.Wait()

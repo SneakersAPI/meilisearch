@@ -1,6 +1,17 @@
 meili_host: http://localhost:7700
 meili_key: 
 postgres_dsn: postgres://localhost:5432/public
+batch_size: 5000
+# [enable_async]
+# When true, batch will be sent in a separate thread
+# This might improve performance but it almost might increase
+# memory usage of the MeiliSearch instance. Use with caution.
+enable_async: false 
+# [wait_time]
+# Time in milliseconds to wait before sending the next batch
+# when enable_async is false. Delaying batch sending allows
+# the MeiliSearch instance to free up memory.
+wait_time: 1000
 indexes:
     - source: variants_table
       destination: variants_index

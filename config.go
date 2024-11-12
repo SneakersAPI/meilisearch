@@ -8,10 +8,13 @@ import (
 )
 
 type Config struct {
-	MeiliHost string        `yaml:"meili_host"`
-	MeiliKey  string        `yaml:"meili_key"`
-	Postgres  string        `yaml:"postgres_dsn"`
-	Indexes   []IndexConfig `yaml:"indexes"`
+	MeiliHost   string        `yaml:"meili_host"`
+	MeiliKey    string        `yaml:"meili_key"`
+	Postgres    string        `yaml:"postgres_dsn"`
+	Indexes     []IndexConfig `yaml:"indexes"`
+	BatchSize   int           `yaml:"batch_size"`
+	EnableAsync bool          `yaml:"enable_async"`
+	WaitTime    int           `yaml:"wait_time"`
 }
 
 func (c *Config) Parse(path string) error {

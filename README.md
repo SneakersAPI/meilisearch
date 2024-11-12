@@ -10,11 +10,19 @@ Script used at [SneakersAPI.dev](https://sneakersapi.dev) to index Meilisearch f
 
 **About performance:**
 
-- 180k rows with complex nested JSON: 45s, about ~3.9k rows/s
+- 180k rows with complex nested JSON: 45s, about ~3.9k rows/s (async enabled)
 
 ## Configuration
 
 Configuration is done via a YAML file. See `config.example.yml` for reference.
+
+**About `enable_async` and `wait_time`:**
+
+- When `enable_async` is true, batches are sent in a separate thread, it greatly improves performance but the memory usage of the MeiliSearch instance is much higher.
+- When `enable_async` is false, `wait_time` is the time in milliseconds to wait before sending the next batch. This is useful on low-end VPS to avoid memory issues as the MeiliSearch instance will have time to free up memory between batches.
+- For low-memory VPS, it's recommended to use `enable_async: false` and to set a `wait_time`, depending on the number of rows to sync. You might be interested to use these environment variables on the MeiliSearch instance also:
+  - `MEILI_EXPERIMENTAL_REDUCE_INDEXING_MEMORY_USAGE=true`
+  - `MEILI_EXPERIMENTAL_MAX_NUMBER_OF_BATCHED_TASKS=5`
 
 ## Running
 
