@@ -1,0 +1,18 @@
+meili_host: http://localhost:7700
+meili_key: 
+postgres_dsn: postgres://localhost:5432/public
+indexes:
+    - source: variants_table
+      destination: variants_index
+      primary: id
+      searchable:
+        - sku
+        - gtin
+      filterable:
+        - gtin
+        - sku
+      sortable:
+        - updated_at
+      cursor:
+        column: updated_at
+        last_sync: 
