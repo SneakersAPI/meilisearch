@@ -67,7 +67,7 @@ func main() {
 			continue
 		}
 
-		if err := SyncIndex(config, pg, index, func(batch []map[string]interface{}) error {
+		total, err := SyncIndex(config, pg, index, func(batch []map[string]interface{}) error {
 			_, err := indexMs.AddDocuments(batch)
 			if err != nil {
 				return err
@@ -76,7 +76,9 @@ func main() {
 			log.WithField("batch", len(batch)).Info("Added batch to index")
 
 			return nil
-		}); err != nil {
+		})
+
+		if err != nil {
 			log.WithError(err).WithField("index", index.Destination).Error("Failed to sync index")
 			continue
 		}
@@ -90,6 +92,7 @@ func main() {
 		}
 
 		log.WithFields(log.Fields{
+			"total": total,
 			"index": index.Destination,
 			"time":  time.Since(start),
 		}).Info("Index synchronized")
@@ -141,35 +144,35 @@ func MakeIndex(config IndexConfig, drop bool, meta bool, ms meilisearch.ServiceM
 }
 
 // SyncIndex synchronizes the index in Postgres with the index in MeiliSearch.
-func SyncIndex(config Config, pg *pgxpool.Pool, index IndexConfig, onBatch func([]map[string]interface{}) error) error {
+func SyncIndex(config Config, pg *pgxpool.Pool, index IndexConfig, onBatch func([]map[string]interface{}) error) (int, error) {
 	query := fmt.Sprintf("SELECT * FROM %s", index.Source)
 	if index.Cursor.Column != "" {
 		query += fmt.Sprintf(" WHERE %s > '%s'", index.Cursor.Column, index.Cursor.LastSync.Format(time.RFC3339))
 	}
+	query += " ORDER BY " + index.SourcePrimary
 
+	total := 0
 	offset := 0
 	wg := sync.WaitGroup{}
 	for {
 		rows, err := pg.Query(ctx, fmt.Sprintf("%s LIMIT %d OFFSET %d", query, config.BatchSize, offset))
 		if err != nil {
-			return err
+			return total, err
 		}
 
 		batch := []map[string]interface{}{}
 		for rows.Next() {
 			var row map[string]interface{}
 			if err := pgxscan.ScanRow(&row, rows); err != nil {
-				return err
+				return total, err
 			}
 			batch = append(batch, row)
 		}
 
+		total += len(batch)
+
 		if len(batch) == 0 {
 			break
-		}
-
-		if !config.EnableAsync {
-			wg.Wait()
 		}
 
 		wg.Add(1)
@@ -180,6 +183,10 @@ func SyncIndex(config Config, pg *pgxpool.Pool, index IndexConfig, onBatch func(
 			}
 		}()
 
+		if !config.EnableAsync {
+			wg.Wait()
+		}
+
 		offset += config.BatchSize
 
 		if !config.EnableAsync && config.WaitTime > 0 {
@@ -189,5 +196,5 @@ func SyncIndex(config Config, pg *pgxpool.Pool, index IndexConfig, onBatch func(
 
 	wg.Wait()
 
-	return nil
+	return total, nil
 }

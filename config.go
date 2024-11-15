@@ -36,13 +36,14 @@ func (c *Config) Save(path string) error {
 }
 
 type IndexConfig struct {
-	Source      string   `yaml:"source"`
-	Destination string   `yaml:"destination"`
-	Primary     string   `yaml:"primary"`
-	Searchable  []string `yaml:"searchable"`
-	Filterable  []string `yaml:"filterable"`
-	Sortable    []string `yaml:"sortable"`
-	Cursor      Cursor   `yaml:"cursor"`
+	Source        string   `yaml:"source"`
+	Destination   string   `yaml:"destination"`
+	Primary       string   `yaml:"primary"`
+	SourcePrimary string   `yaml:"source_primary"`
+	Searchable    []string `yaml:"searchable"`
+	Filterable    []string `yaml:"filterable"`
+	Sortable      []string `yaml:"sortable"`
+	Cursor        Cursor   `yaml:"cursor"`
 }
 
 type Cursor struct {
