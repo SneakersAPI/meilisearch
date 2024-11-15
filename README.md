@@ -27,6 +27,10 @@ Configuration is done via a YAML file. See `config.example.yml` for reference.
 ## Running
 
 ```bash
+export MEILISEARCH_DSN=<meilisearch_dsn>
+export MEILISEARCH_API_KEY=<meilisearch_api_key>
+export DATABASE_URL=<database_url>
+
 go run . [-only=<index_name>] [-drop=[true|false]] [-meta=[true|false]] [-config=<path>]
 ```
 
@@ -39,5 +43,12 @@ go run . [-only=<index_name>] [-drop=[true|false]] [-meta=[true|false]] [-config
 
 ```bash
 docker build -t meilisearch .
-docker run meilisearch [-only=<index_name>] [-drop=[true|false]] [-meta=[true|false]] [-config=<path>]
+docker run -e MEILISEARCH_DSN=<meilisearch_dsn> \
+    -e MEILISEARCH_API_KEY=<meilisearch_api_key> \
+    -e DATABASE_URL=<database_url> \
+    meilisearch \
+    [-only=<index_name>] \
+    [-drop=[true|false]] \
+    [-meta=[true|false]] \
+    [-config=<path>]
 ```

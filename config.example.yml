@@ -1,6 +1,3 @@
-meili_host: http://localhost:7700
-meili_key: 
-postgres_dsn: postgres://localhost:5432/public
 batch_size: 5000
 # [enable_async]
 # When true, batch will be sent in a separate thread

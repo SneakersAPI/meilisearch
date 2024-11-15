@@ -8,9 +8,6 @@ import (
 )
 
 type Config struct {
-	MeiliHost   string        `yaml:"meili_host"`
-	MeiliKey    string        `yaml:"meili_key"`
-	Postgres    string        `yaml:"postgres_dsn"`
 	Indexes     []IndexConfig `yaml:"indexes"`
 	BatchSize   int           `yaml:"batch_size"`
 	EnableAsync bool          `yaml:"enable_async"`

@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -29,12 +30,12 @@ func main() {
 		log.WithError(err).Fatalf("Failed to parse config")
 	}
 
-	ms := meilisearch.New(config.MeiliHost, meilisearch.WithAPIKey(config.MeiliKey))
+	ms := meilisearch.New(os.Getenv("MEILISEARCH_DSN"), meilisearch.WithAPIKey(os.Getenv("MEILISEARCH_API_KEY")))
 	if !ms.IsHealthy() {
 		log.Fatal("MeiliSearch is not healthy")
 	}
 
-	pg, err := pgxpool.New(ctx, config.Postgres)
+	pg, err := pgxpool.New(ctx, os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.WithError(err).Fatal("Failed to connect to Postgres")
 	}
