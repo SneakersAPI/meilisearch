@@ -109,8 +109,9 @@ func main() {
 // MakeIndex creates a new index in MeiliSearch and returns the index manager.
 func MakeIndex(config IndexConfig, drop bool, meta bool, ms meilisearch.ServiceManager) (meilisearch.IndexManager, error) {
 	idx := ms.Index(config.Destination)
+	stats, err := idx.GetStats()
 
-	if drop {
+	if drop || err != nil {
 		if _, err := ms.DeleteIndex(config.Destination); err != nil {
 			return nil, err
 		}
@@ -125,12 +126,7 @@ func MakeIndex(config IndexConfig, drop bool, meta bool, ms meilisearch.ServiceM
 		log.WithField("index", config.Destination).Info("Created index")
 	}
 
-	stats, err := idx.GetStats()
-	if err != nil {
-		return nil, err
-	}
-
-	if meta || stats.NumberOfDocuments == 0 {
+	if meta || stats.NumberOfDocuments == 0 || err != nil {
 		if _, err := idx.UpdateFilterableAttributes(&config.Filterable); err != nil {
 			return nil, err
 		}
