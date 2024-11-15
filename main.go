@@ -124,7 +124,12 @@ func MakeIndex(config IndexConfig, drop bool, meta bool, ms meilisearch.ServiceM
 		log.WithField("index", config.Destination).Info("Created index")
 	}
 
-	if meta {
+	stats, err := idx.GetStats()
+	if err != nil {
+		return nil, err
+	}
+
+	if meta || stats.NumberOfDocuments == 0 {
 		if _, err := idx.UpdateFilterableAttributes(&config.Filterable); err != nil {
 			return nil, err
 		}
